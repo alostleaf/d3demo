@@ -26,6 +26,13 @@ const getPreNodeDistance=(node)=>{
     return BaseData.nodes[preName];
   }
 }
+
+const getLineXY=(node,idx,type)=>{
+  if('x1'==type) return 0
+  if('y1'==type) return 0
+  if('x2'==type) return BaseData.nodes[4].x
+  if('y2'==type) return BaseData.nodes[4].y
+}
 //计算相关坐标
 APP.prototype.getXYInfo = (node, i, shape, isXais) => {
   let { siteNo, nextMap }=node
@@ -153,7 +160,21 @@ function drawSites(sites) {
   BaseData.svgSites
     .append('text')
     .text(d => d.siteNo)
-
+  //绘制连线
+ /*  BaseData.svgSites
+  .append('line')
+  .attr('x1',(d,i)=>{
+    return getLineXY(d,i,'x1')
+  })
+  .attr('y1',(d,i)=>{
+    return getLineXY(d,i,'y1')
+  })
+  .attr('x2',(d,i)=>{
+    return getLineXY(d,i,'x2')
+  })
+  .attr('y2',(d,i)=>{
+    return getLineXY(d,i,'y2')
+  }) */
 }
 
 $(() => {
