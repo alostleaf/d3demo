@@ -13,7 +13,12 @@ const BaseData = {
   nodesLines: [], //待绘制的节点连线信息[[node1,node2],[node3,node4]]
   allLinesSVg: null, //所有连线的line对象
   shortLineColor: "blue", //最短路径线段的颜色
-  firstNodeNumInLine: [1, 5, 9, 12] //第一排第一个元素
+  firstNodeNumInLine: [1, 5, 9, 12], //第一排第一个元素
+  markers: {
+    //初始化默认的marker
+    start: "11",
+    track: [[3, 12], [7, 11], [4, 13]]
+  }
 };
 const APP = function() {};
 APP.prototype.updateSize = () => {
@@ -170,6 +175,7 @@ function drawSites(sites) {
   BaseData.svgSites
     .append("circle")
     .attr("r", 15)
+    .attr("siteNo", d => d.siteNo)
     .attr("class", "site");
   //绘制文本
   BaseData.svgSites.append("text").text(d => d.siteNo);
@@ -177,11 +183,17 @@ function drawSites(sites) {
   //绘制节点连线
   BaseData.nodesLines = [];
   BaseData.nodes.forEach((node, idx) => {
+    node.useage = { bottom: true, left: true, right: true, top: true };
     let nodeMap = node.nextMap;
     let parentNodeName = node.siteNo;
     for (var key in nodeMap) {
       let nodeName = key;
       let nodeLength = nodeMap[nodeName];
+      //计算各点的占用情况，某个点的上下左右是否有占用
+      let currentNode = node;
+      let nextNode = findNode(nodeName);
+      markNodeUsage(currentNode, nextNode);
+      //获取2点的对应关系，用于连线，如1-2，2-1只需要画一条线即可
       let lineName = [parentNodeName, nodeName]
         .sort((a, b) => {
           a = parseInt(a);
@@ -195,22 +207,82 @@ function drawSites(sites) {
         continue;
       }
       BaseData.nodesDistance[lineName] = nodeLength;
-      BaseData.nodesLines.push([
-        node,
-        findNode(nodeName)
-      ]);
+      BaseData.nodesLines.push([node, findNode(nodeName)]);
     }
   });
   drawNodeLine();
+  drawDefaultMaker();
 }
 
+//获取可用的marker位置，如果4个方式没有，返回一个可用的位置坐标
+const getValiableMarkerPos = node => {
+  const dx = (dy = 40);
+  if (!node.useage) return { x: node.x, y: node.y - dy };
+  let canUsePos = null;
+  for (var key in node.useage) {
+    if (node.useage[key]) {
+      canUsePos = key;
+      break;
+    }
+  }
+  if (canUsePos == null) return { x: node.x, y: node.y };
+  if (key == "top") return { x: node.x-12, y: node.y - dy };
+  if (key == "left") return { x: node.x - dx, y: node.y-12 };
+  if (key == "right") return { x: node.x + dx-24, y: node.y-12 };
+  if (key == "bottom") return { x: node.x-12, y: node.y + dy -24 };
+};
+const drawDefaultMaker = () => {
+  drawStartPosition(BaseData.markers.start);
+};
+
+const drawStartPosition = nodeName => {
+  let node = findNode(nodeName);
+  let xy = getValiableMarkerPos(node);
+  console.log("xy", xy);
+  let rectMarker = BaseData.svg
+    .selectAll(`rect.marker`)
+    .data(["A"])
+    .enter()
+    .append("rect")
+    .attr("width", 25)
+    .attr("height", 25)
+    .attr("class", "marker start")
+    .attr("transform", (d, i) => {
+      return `translate(${xy.x},${xy.y})`;
+    });
+
+  rectMarker
+    .append("text")
+    .attr("class", "text")
+    .attr("dx", 10)
+    .attr("dy", 13)
+    .text(d => {
+      return d;
+    });
+};
+
+//标记一个node在四个方向的占用情况
+const markNodeUsage = (currentNode, nextNode) => {
+  if (currentNode.x == nextNode.x) {
+    if (currentNode.y > nextNode.y) currentNode.useage["top"] = false;
+    else {
+      currentNode.useage["bottom"] = false;
+    }
+  }
+  if (currentNode.y == nextNode.y) {
+    if (currentNode.x > nextNode.x) currentNode.useage["left"] = false;
+    else {
+      currentNode.useage["right"] = false;
+    }
+  }
+};
 /**
  * find node by siteNo
  */
-function findNode(name){
+function findNode(name) {
   return BaseData.nodes.find(i => {
     return i.siteNo == name;
-  })
+  });
 }
 
 function drawNodeLine() {
@@ -239,29 +311,42 @@ function drawNodeLine() {
     .data(Object.keys(BaseData.nodesDistance))
     .enter()
     .append("g")
-    .attr("class", "distance")
-    .attr("transform", (d, i) => {
-      let x=y=-1;
-      let nodesName=d.split('-')
-      let node1=findNode(nodesName[0])
-      let node2=findNode(nodesName[1])
-      if(node1.y==node2.y){
-        x=node1.x+(node2.x-node1.x)/2
-        y=node1.y
-      }else if(node1.x==node2.x){
-        y=node1.y+(node2.y-node1.y)/2
-        x=node1.x
-      }
-      return `translate(${x},${y})`;
+    .attr("class", "nodeLen")
+    .on("click", d => {
+      console.log("len click", d);
     });
 
+  lineGroup.attr("transform", (d, i) => {
+    let x = (y = -1);
+    let nodesName = d.split("-");
+    let node1 = findNode(nodesName[0]);
+    let node2 = findNode(nodesName[1]);
+    if (node1.y == node2.y) {
+      x = node1.x + (node2.x - node1.x) / 2 - 10;
+      y = node1.y - 10;
+    } else if (node1.x == node2.x) {
+      y = node1.y + (node2.y - node1.y) / 2 - 10;
+      x = node1.x - 10;
+    }
+    return `translate(${x},${y})`;
+  });
   lineGroup
+    .append("rect")
+    .attr("width", 25)
+    .attr("height", 25)
+    .attr("class", "distance")
+    .attr("fill", "white");
+
+  let lineGroupRect = lineGroup
     .append("text")
     .attr("class", "text")
+    .attr("dx", 10)
+    .attr("dy", 13)
     .text(d => {
       console.log("text", BaseData.nodesDistance[d]);
       return BaseData.nodesDistance[d];
     });
+  console.log("userage", BaseData.nodes);
 }
 
 $(() => {
@@ -269,3 +354,6 @@ $(() => {
   getPathInfo();
   console.log("app", BaseData);
 });
+
+//计算最短路径
+getShortestPath = () => {};

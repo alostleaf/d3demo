@@ -25,8 +25,18 @@
     }
 
     svg line {
-      stroke: rgb(99, 99, 99);
+      stroke: #5D5C5D;
       stroke-width: 2
+    }
+    .distance .text{
+      font-size:20px;
+    }
+    g.nodeLen:hover{
+      fill:blue;
+      cursor: pointer;
+    }
+    rect.marker{
+      fill:gray;
     }
   </style>
 </head>
@@ -35,6 +45,9 @@
   <div class="main">
     <div class="tools">
       工具栏
+      <div>
+        <button onclick="getShortestPath">计算最短路径</button>
+      </div>
     </div>
     <div class="graph-container">
         <div class="graph"></div>
