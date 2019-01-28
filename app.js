@@ -119,6 +119,8 @@ function initNodes(data) {
     nodes.push(data[key])
   })
   BaseData.nodes = nodes
+  /* 获取各点路径信息 */
+  
   console.log(nodes)
 }
 
