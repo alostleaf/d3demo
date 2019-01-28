@@ -1,19 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>Hello,D3</title>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <script src="./libs/jquery-3.3.1.min.js"></script>
-    <script src="./libs/d3.v5.min.js"></script>
-    <style>
-      
-    </style>
-  </head>
 
-  <body>
-    <div id="main"></div>
-  </body>
-  <script src="./app.js"></script>
+<head>
+  <title>路径规划</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <script src="./libs/jquery-3.3.1.min.js"></script>
+  <script src="./libs/d3.v5.min.js"></script>
+  <link rel="stylesheet" href="./app.css">
+  <style>
+    .graph .site {
+      fill: none;
+      stroke-width: 1px;
+      stroke: black;
+    }
+
+    svg text {
+      font-size: 1em;
+      text-anchor: middle;
+      /* 文本水平居中 */
+      dominant-baseline: middle;
+      /* 文本垂直居中 */
+    }
+
+    svg line {
+      stroke: rgb(99, 99, 99);
+      stroke-width: 2
+    }
+  </style>
+</head>
+
+<body>
+  <div class="main">
+    <div class="tools">
+      工具栏
+    </div>
+    <div class="graph-container">
+        <div class="graph"></div>
+    </div>
+  </div>
+</body>
+<script src="./app.js"></script>
+
 </html>

@@ -1,75 +1,163 @@
-var height = 480,
-  width = 640;
+/***
+ * 绘制相关的基础数据
+ */
+const BaseData = {
+  width: 0,//画布宽
+  height: 0,//canvas height
+  svg: null,//main container
+  nodes: null,//nodes info
+  scale: -1,//路径距离单位和svg尺寸的比值
+  svgSites: null,//svg Node map one node data
+  nodesXY: {},
+  firstNodeNumInLine:[1,5,9,12],//第一排第一个元素
+}
+const APP = function () { }
+APP.prototype.updateSize = () => {
+  console.log($('.graph').width(), $('.graph').height())
+  BaseData.width = $('.graph').width() || 800
+  BaseData.height = $('.graph').height() || 600
+  BaseData.scale = BaseData.width / 5
+}
 
-var leftNodes = [{ name: "Alice" }, { name: "Bob" }, { name: "Jane" }];
+const getPreNodeDistance=(node)=>{
+  let siteName = node.siteNo;
+  let preName = parseInt(siteName) - 2 + '';
+  if(node.nextMap[parseInt(siteName) - 1]){
+    return BaseData.nodes[preName];
+  }
+}
+//计算相关坐标
+APP.prototype.getXYInfo = (node, i, shape, isXais) => {
+  let { siteNo, nextMap }=node
+  let yIncrement = BaseData.scale
+  let siteNoInt = parseInt(siteNo)
+  if (siteNoInt <= 4) {
+    yIncrement = 0
+  } else if (siteNoInt <= 8) {
+    yIncrement = BaseData.scale * 1
+  } else if (siteNoInt <= 11) {
+    yIncrement = BaseData.scale * 2
+  } else if (siteNoInt <= 15) {
+    yIncrement = BaseData.scale * 3
+  }
+  console.log('xy', node)
+  if (shape == 'circle') {
+    let pre=getPreNodeDistance(node)
+    console.log('getPreNodeDistance',node,pre)
+    if (isXais) {
+      if(i==0){
+        node.x=50
+      }else{
+        if(pre){
+          if(node.siteNo=='10'){
+            node.x=pre.x+BaseData.scale*2
+          }else{
+            node.x=pre.x+BaseData.scale*pre.nextMap[(parseInt(pre.siteNo)+1)+'']
+          }
+        }else{
+          node.x=50
+        }
+      }
+      return node.x;
+    } else {
+      if(i==0){
+        node.y=50
+      }else{
+        if(pre){
+          node.y=pre.y
+        }else{
+          node.y=BaseData.nodes[0].y+yIncrement
+        }
+      }
+      return node.y
+    }
+  }
+}
 
-var rightNodes = [{ name: "Jeremy" }, { name: "David" }, { name: "Dylan" }];
 
-var svg = d3
-  .select("body")
-  .append("svg")
-  .attr("width", width)
-  .attr("height", height);
 
-var leftDrag = d3.drag();
-var currentDragNode = null;
-var line;
-
-leftDrag
-  .on("start", dragStart)
-  .on("drag", dragged)
-  .on("end", dragEnd);
-
-var left = svg
-  .selectAll(".left-nodes")
-  .data(leftNodes)
-  .enter()
-  .append("g")
-  .classed("node", true)
-  .append("circle")
-  .on("mousedown", () => {
-    d3.event.stopPropagation();
+const app = new APP()
+/**
+ * 获取Site数据
+ */
+function getPathInfo() {
+  $.ajax({
+    url: 'map/init',
+    type: 'get',
+    success(resp) {
+      initNodes(resp)
+      drawSites(BaseData.nodes)
+    },
+    error(err) {
+      console.log(err)
+    },
   })
-  .attr("cx", (d, i) => 100)
-  .attr("cy", (d, i) => 50 * (i + 1))
-  .attr("r", width * 0.01)
-  .call(leftDrag);
-
-var right = svg
-  .selectAll(".right-nodes")
-  .data(rightNodes)
-  .enter()
-  .append("g")
-  .classed("node", true)
-  .append("circle")
-  .attr("cx", (d, i) => 200)
-  .attr("cy", (d, i) => 50 * (i + 1))
-  .attr("r", width * 0.01);
-
-function dragEnd(d) {
-  console.log(d3.event.sourceEvent.target);
-  /* line.remove() */
-  const rightNodes = right.nodes();
 }
 
-function dragged(d) {
-  const startX = d3.select(this).attr("cx");
-  const startY = d3.select(this).attr("cy");
-  const endX = Math.floor(d3.event.x);
-  const endY = Math.floor(d3.event.y);
-  const p = d3.path();
-
-  p.moveTo(startX, startY);
-  p.lineTo(endX, endY);
-
-  line.attr("d", p.toString());
+/**
+ *构造nodes数据
+ *
+ * @param {*} data
+ */
+function initNodes(data) {
+  if (!data || Object.keys(data).length < 1) return
+  let origins = Object.keys(data)
+  origins.sort((a, b) => {
+    a = parseInt(a)
+    b = parseInt(b)
+    return a > b ? 1 : a < b ? -1 : 0
+  })
+  let nodes = []
+  origins.forEach((key) => {
+    nodes.push(data[key])
+  })
+  BaseData.nodes = nodes
+  console.log(nodes)
 }
 
-function dragStart(d) {
-  d3.event.sourceEvent.stopPropagation();
-  line = svg
-    .append("path")
-    .style("fill", "none")
-    .style("stroke", "#666")
-    .style("stroke-width", 2);
+/**
+ *绘制Sites
+ *
+ * @param {*} sites
+ */
+function drawSites(sites) {
+
+  if (!sites || sites.length < 1) {
+    throw new Error('need nodes to drawSites Graph!')
+  }
+  if (!BaseData.svg) {
+    BaseData.svg = d3.select('.graph')
+      .append('svg')
+      .attr('width', BaseData
+        .width)
+      .attr('height', BaseData.height)
+  }
+
+  BaseData.svgSites = BaseData.svg.selectAll('g')
+    .data(sites)
+    .enter()
+    .append('g')
+    .attr('id', d => d.siteNo)
+    .attr('transform', (d, i) => {
+      let x = app.getXYInfo(d, i, 'circle', true)
+      let y = app.getXYInfo(d, i, 'circle', false)
+      return `translate(${x},${y})`
+    })
+
+  //绘制圆环  
+  BaseData.svgSites
+    .append('circle')
+    .attr('r', 15)
+    .attr('class', 'site')
+  //绘制文本
+  BaseData.svgSites
+    .append('text')
+    .text(d => d.siteNo)
+
 }
+
+$(() => {
+  app.updateSize()
+  getPathInfo()
+  console.log('app', BaseData)
+})
