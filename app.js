@@ -16,11 +16,12 @@ const BaseData = {
   firstNodeNumInLine: [1, 5, 9, 12], //第一排第一个元素
   markers: {
     //初始化默认的marker
-    start: "11",
-    track: [[3, 12], [7, 11], [4, 13]]
+    start: [{ node: 2, show: 'A' },],
+    v: [{ node: 3, show: 'V1' }, { node: 7, show: 'V2' }, { node: 4, show: 'V3' }],
+    s: [{ node: 12, show: 'S1' }, { node: 11, show: 'S2' }, { node: 13, show: 'S3' }]
   }
 };
-const APP = function() {};
+const APP = function () { };
 APP.prototype.updateSize = () => {
   console.log($(".graph").width(), $(".graph").height());
   BaseData.width = $(".graph").width() || 800;
@@ -226,39 +227,44 @@ const getValiableMarkerPos = node => {
     }
   }
   if (canUsePos == null) return { x: node.x, y: node.y };
-  if (key == "top") return { x: node.x-12, y: node.y - dy };
-  if (key == "left") return { x: node.x - dx, y: node.y-12 };
-  if (key == "right") return { x: node.x + dx-24, y: node.y-12 };
-  if (key == "bottom") return { x: node.x-12, y: node.y + dy -24 };
+  if (key == "top") return { x: node.x - 12, y: node.y - dy };
+  if (key == "left") return { x: node.x - dx, y: node.y - 12 };
+  if (key == "right") return { x: node.x + dx - 24, y: node.y - 12 };
+  if (key == "bottom") return { x: node.x - 12, y: node.y + dy - 24 };
 };
 const drawDefaultMaker = () => {
-  drawStartPosition(BaseData.markers.start);
+  drawMarker('start', BaseData.markers.start);
+  drawMarker('v', BaseData.markers.v);
+  drawMarker('s', BaseData.markers.s);
 };
 
-const drawStartPosition = nodeName => {
-  let node = findNode(nodeName);
-  let xy = getValiableMarkerPos(node);
-  console.log("xy", xy);
+const drawMarker = (type, content) => {
   let rectMarker = BaseData.svg
-    .selectAll(`rect.marker`)
-    .data(["A"])
+    .selectAll(`g.${type}`)
+    .data(content)
     .enter()
-    .append("rect")
+    .append("g")
     .attr("width", 25)
     .attr("height", 25)
-    .attr("class", "marker start")
+    .attr("class", `marker ${type}`)
     .attr("transform", (d, i) => {
+      let node = findNode(d.node);
+      let xy = getValiableMarkerPos(node);
+      console.log("xy", xy);
       return `translate(${xy.x},${xy.y})`;
     });
 
   rectMarker
+    .append("rect")
+    .attr("width", 25)
+    .attr("height", 25)
+    .attr("fill", "white");
+  rectMarker
     .append("text")
     .attr("class", "text")
-    .attr("dx", 10)
+    .attr("dx", 12)
     .attr("dy", 13)
-    .text(d => {
-      return d;
-    });
+    .text(d => d.show);
 };
 
 //标记一个node在四个方向的占用情况
@@ -276,6 +282,27 @@ const markNodeUsage = (currentNode, nextNode) => {
     }
   }
 };
+
+//绘制最短路径
+function drwaPath(path, routes) {
+  console.log(path, routes)
+  BaseData.linesSvg
+    .selectAll(".line")
+    .data(BaseData.nodesLines)
+    // .enter()
+    .classed("shortest", d => {
+      // in-shortest
+      console.log('drwaPath', d, routes)
+      let key1 = getDistanceKey(d[0].siteNo, d[1].siteNo)
+      let isExist = routes.find(route => {
+        route = route.split('-')
+        let routeKey = getDistanceKey(route[0], route[1])
+        return routeKey == key1
+      })
+      return isExist
+    })
+
+}
 /**
  * find node by siteNo
  */
@@ -285,6 +312,23 @@ function findNode(name) {
   });
 }
 
+/**
+ *获取2个点的键名 如 1-2，2-1 返回 1,-2
+ *
+ * @param {*} node1Name
+ * @param {*} node2Name
+ */
+function getDistanceKey(node1Name, node2Name) {
+  let lineName = [node1Name, node2Name]
+    .sort((a, b) => {
+      a = parseInt(a);
+      b = parseInt(b);
+      return a > b ? 1 : a < b ? -1 : 0;
+    })
+    .join("-");
+  return lineName
+}
+
 function drawNodeLine() {
   console.log("drawLine", BaseData.nodesLines);
   BaseData.allLinesSVg = BaseData.linesSvg
@@ -292,7 +336,7 @@ function drawNodeLine() {
     .data(BaseData.nodesLines)
     .enter()
     .append("line")
-    .attr("class", "line")
+    .attr("class", d => `line ${getDistanceKey(d[0].siteNo, d[1].siteNo)}`)
     .attr("x1", d => {
       return d[0].x;
     })
@@ -352,8 +396,60 @@ function drawNodeLine() {
 $(() => {
   app.updateSize();
   getPathInfo();
+  bindEvt();
   console.log("app", BaseData);
 });
 
-//计算最短路径
-getShortestPath = () => {};
+//事件绑定
+function bindEvt() {
+  $('#calcShortestPathBtn').on('click', (e) => {
+    let params = {
+      "maxOver": 2,
+      "paths": BaseData.markers.v.map((node, i) => {
+        return {
+          "start": node.node,
+          "end": BaseData.markers.s[i].node,
+        }
+      }),
+      "start": BaseData.markers.start[0].node,
+    }
+    $.ajax({
+      type: 'post',
+      url: 'map/beacon',
+      dataType: 'json',
+      contentType: 'application/json',
+      data: JSON.stringify(params),
+      success(data) {
+        showResult(data)
+      },
+      error(err) {
+        console.log(err)
+      }
+    })
+  })
+}
+
+/**
+ *显示路径结果信息
+ *
+ * @param {*} data
+ */
+function showResult(data) {
+  let distance = data.distance
+  let path = data.path
+  $('.distance').html(`最短路径距离:${distance}`)
+  $('.path').html(`最短路线:${path.join('➝')}`)
+  //获取路径连线信息
+  let routes = []
+  let tmp = []
+  path.forEach((val, idx) => {
+    if (idx + 1 == path.length) return
+    routes.push([
+      val,
+      path[idx + 1]
+    ].join('-'))
+  })
+  console.log(routes.join(','))
+  //绘制最短路径
+  drwaPath(path, routes)
+}

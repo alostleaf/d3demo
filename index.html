@@ -28,6 +28,10 @@
       stroke: #5D5C5D;
       stroke-width: 2
     }
+    svg line.shortest{
+      stroke: blue;
+      stroke-width: 2
+    }
     .distance .text{
       font-size:20px;
     }
@@ -35,8 +39,14 @@
       fill:blue;
       cursor: pointer;
     }
-    rect.marker{
-      fill:gray;
+    g.marker.start{
+      fill:green;
+    }
+    g.marker.v{
+      fill:red;
+    }
+    g.marker.s{
+      fill: blue;
     }
   </style>
 </head>
@@ -46,7 +56,11 @@
     <div class="tools">
       工具栏
       <div>
-        <button onclick="getShortestPath">计算最短路径</button>
+        <button id="calcShortestPathBtn">计算最短路径</button>
+      </div>
+      <div class="result">
+        <div class="distance"></div>
+        <div class="path"></div>
       </div>
     </div>
     <div class="graph-container">
