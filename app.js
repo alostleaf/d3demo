@@ -2,8 +2,24 @@
  * 绘制相关的基础数据
  */
 const BaseData = {
-  shapeData: { "11": { "siteNo": "11", "nextMap": { "14": 1, "8": 1, "10": 1 } }, "12": { "siteNo": "12", "nextMap": { "13": 2, "9": 2 } }, "13": { "siteNo": "13", "nextMap": { "12": 2, "14": 1, "10": 2 } }, "14": { "siteNo": "14", "nextMap": { "11": 1, "13": 1, "15": 1 } }, "15": { "siteNo": "15", "nextMap": { "14": 1, "4": 3 } }, "1": { "siteNo": "1", "nextMap": { "2": 1, "5": 1 } }, "2": { "siteNo": "2", "nextMap": { "1": 1, "3": 2, "6": 2 } }, "3": { "siteNo": "3", "nextMap": { "2": 2, "4": 1, "8": 2 } }, "4": { "siteNo": "4", "nextMap": { "3": 1, "15": 3 } }, "5": { "siteNo": "5", "nextMap": { "1": 1, "6": 1, "9": 1 } }, "6": { "siteNo": "6", "nextMap": { "2": 2, "5": 1, "7": 1 } }, "7": { "siteNo": "7", "nextMap": { "6": 1, "8": 1, "10": 1 } }, "8": { "siteNo": "8", "nextMap": { "11": 1, "3": 2, "7": 1 } }, "9": { "siteNo": "9", "nextMap": { "12": 2, "5": 1, "10": 3 } }, "10": { "siteNo": "10", "nextMap": { "11": 1, "13": 2, "7": 1, "9": 3 } } },
-  routeData: null,//实际的路径信息
+  shapeData: {
+    "11": { siteNo: "11", nextMap: { "14": 1, "8": 1, "10": 1 } },
+    "12": { siteNo: "12", nextMap: { "13": 2, "9": 2 } },
+    "13": { siteNo: "13", nextMap: { "12": 2, "14": 1, "10": 2 } },
+    "14": { siteNo: "14", nextMap: { "11": 1, "13": 1, "15": 1 } },
+    "15": { siteNo: "15", nextMap: { "14": 1, "4": 3 } },
+    "1": { siteNo: "1", nextMap: { "2": 1, "5": 1 } },
+    "2": { siteNo: "2", nextMap: { "1": 1, "3": 2, "6": 2 } },
+    "3": { siteNo: "3", nextMap: { "2": 2, "4": 1, "8": 2 } },
+    "4": { siteNo: "4", nextMap: { "3": 1, "15": 3 } },
+    "5": { siteNo: "5", nextMap: { "1": 1, "6": 1, "9": 1 } },
+    "6": { siteNo: "6", nextMap: { "2": 2, "5": 1, "7": 1 } },
+    "7": { siteNo: "7", nextMap: { "6": 1, "8": 1, "10": 1 } },
+    "8": { siteNo: "8", nextMap: { "11": 1, "3": 2, "7": 1 } },
+    "9": { siteNo: "9", nextMap: { "12": 2, "5": 1, "10": 3 } },
+    "10": { siteNo: "10", nextMap: { "11": 1, "13": 2, "7": 1, "9": 3 } }
+  },
+  routeData: null, //实际的路径信息
   width: 0, //画布宽
   height: 0, //canvas height
   svg: null, //main container
@@ -19,12 +35,21 @@ const BaseData = {
   firstNodeNumInLine: [1, 5, 9, 12], //第一排第一个元素
   markers: {
     //初始化默认的marker
-    start: [{ node: 2, show: 'A' },],
-    v: [{ node: 3, show: 'V1' }, { node: 7, show: 'V2' }, { node: 4, show: 'V3' }],
-    s: [{ node: 12, show: 'S1' }, { node: 11, show: 'S2' }, { node: 13, show: 'S3' }]
-  }
+    a: [{ node: 2, show: "A" }],
+    v: [
+      { node: 3, show: "V1" },
+      { node: 7, show: "V2" },
+      { node: 4, show: "V3" }
+    ],
+    s: [
+      { node: 12, show: "S1" },
+      { node: 11, show: "S2" },
+      { node: 13, show: "S3" }
+    ]
+  },
+  nodesXY: {} //各个node的坐标信息{1:[1,2],2:[50,10]}
 };
-const APP = function () { };
+const APP = function() {};
 APP.prototype.updateSize = () => {
   console.log($(".graph").width(), $(".graph").height());
   BaseData.width = $(".graph").width() || 800;
@@ -105,7 +130,7 @@ function getPathInfo() {
     url: "map/init",
     type: "get",
     success(resp) {
-      updateRouteInfo(resp)
+      updateRouteInfo(resp);
       BaseData.nodes = initNodes(BaseData.shapeData);
       drawSites(BaseData.nodes);
     },
@@ -123,7 +148,7 @@ function updateRouteInfo(resp) {
 
 //获取真实的路径信息
 function getRouteDistance(resp) {
-  let distance = {}
+  let distance = {};
   let nodes = initNodes(resp);
   nodes.forEach((node, idx) => {
     let nodeMap = node.nextMap;
@@ -146,7 +171,7 @@ function getRouteDistance(resp) {
       distance[lineName] = nodeLength;
     }
   });
-  return distance
+  return distance;
 }
 
 /**
@@ -169,7 +194,7 @@ function initNodes(data) {
   /* 获取各点路径信息 */
 
   console.log(nodes);
-  return nodes
+  return nodes;
 }
 
 /**
@@ -207,6 +232,7 @@ function drawSites(sites) {
     .attr("transform", (d, i) => {
       let x = app.getXYInfo(d, i, "circle", true);
       let y = app.getXYInfo(d, i, "circle", false);
+      BaseData.nodesXY[d.siteNo] = [x, y];
       return `translate(${x},${y})`;
     });
 
@@ -222,7 +248,8 @@ function drawSites(sites) {
   //绘制节点连线
   BaseData.nodesLines = [];
   BaseData.nodes.forEach((node, idx) => {
-    node.useage = { bottom: true, left: true, right: true, top: true };
+    node.useage = { bottom: true, left: true, right: true, top: true};
+    node.otherPosIncrement=0
     let nodeMap = node.nextMap;
     let parentNodeName = node.siteNo;
     for (var key in nodeMap) {
@@ -264,19 +291,97 @@ const getValiableMarkerPos = node => {
       break;
     }
   }
-  if (canUsePos == null) return { x: node.x, y: node.y };
+
+  //四个点均已繁忙，返回斜线方向的坐标
+  if (canUsePos == null){
+    node.otherPosIncrement+=30
+    return { x: node.x - dx, y: node.y - 60 + node.otherPosIncrement}
+  }
   if (key == "top") return { x: node.x - 12, y: node.y - dy };
   if (key == "left") return { x: node.x - dx, y: node.y - 12 };
   if (key == "right") return { x: node.x + dx - 24, y: node.y - 12 };
   if (key == "bottom") return { x: node.x - 12, y: node.y + dy - 24 };
 };
 const drawDefaultMaker = () => {
-  drawMarker('start', BaseData.markers.start);
-  drawMarker('v', BaseData.markers.v);
-  drawMarker('s', BaseData.markers.s);
+  let dragEvent = d3
+    .drag()
+    .on("drag", function(d) {
+      // console.log("drag", d, d3.event);
+      let x = d3.event.x-12.5;
+      let y = d3.event.y-12.5;
+      d3.select(this).attr("transform", "translate(" + x + "," + y + ")");
+    })
+    .on("start", function(d) {
+      console.log("dragstart", d);
+      // d.preXY=d.xy
+    })
+    .on("end", function(d) {
+      console.log("dragend", d, BaseData.nodesXY, d3.event);
+      let newNode = isAssignNewNode(d3.event.x, d3.event.y);
+      if (newNode) {
+        moveMarker(d, newNode,d3.select(this));
+        return;
+      }
+      //还原
+      d3.select(this).attr(
+        "transform",
+        "translate(" + d.xy.x + "," + d.xy.y + ")"
+      );
+    });
+  drawMarker("start", BaseData.markers.a, dragEvent);
+  drawMarker("v", BaseData.markers.v, dragEvent);
+  drawMarker("s", BaseData.markers.s, dragEvent);
 };
 
-const drawMarker = (type, content) => {
+//检查是否移动marker到圆中
+function isAssignNewNode(x, y) {
+  let nodesXY=BaseData.nodesXY
+  for(let siteNo in nodesXY){
+    let nodeX=nodesXY[siteNo][0]
+    let nodeY=nodesXY[siteNo][1]
+    if(isInCircle(x,nodeX,y,nodeY)){
+        return siteNo
+    }
+  }
+}
+
+//检查坐标是否在圆内
+function isInCircle(x1,x2,y1,y2){
+  let r=15
+  return Math.sqrt(
+    Math.pow(x1-x2,2)
+    +
+    Math.pow(y1-y2,2)
+  ) <=15
+}
+//移动marker
+function moveMarker(oldMarker, newMarker,dragTarget) {
+  console.log('moveMarker',arguments)
+  let newNode=findNode(newMarker);
+  let pos=getValiableMarkerPos(newNode)
+  console.log('new pos',pos)
+  dragTarget.attr(
+    "transform",
+    "translate(" + pos.x + "," + pos.y + ")"
+  );
+  oldMarker.xy.x=pos.x
+  oldMarker.xy.y=pos.y
+  updateMarkerData(oldMarker, newMarker)
+}
+
+//更新baseData中的marker数据
+function updateMarkerData(oldMarker, newMarker){
+  console.log('updateMarkerData',oldMarker,newMarker)
+  oldMarker.node=newMarker
+  return;
+  let show=oldMarker.show[0].toLocaleLowerCase()
+  let info=BaseData.markers[show]
+  let target=info.find(i=>i.node==oldMarker.node)
+  target.node==newMarker
+  console.log(BaseData.markers)
+}
+
+const drawMarker = (type, content, event) => {
   let rectMarker = BaseData.svg
     .selectAll(`g.${type}`)
     .data(content)
@@ -288,9 +393,11 @@ const drawMarker = (type, content) => {
     .attr("transform", (d, i) => {
       let node = findNode(d.node);
       let xy = getValiableMarkerPos(node);
+      d.xy = xy;
       console.log("xy", xy);
       return `translate(${xy.x},${xy.y})`;
-    });
+    })
+    .call(event);
 
   rectMarker
     .append("rect")
@@ -323,96 +430,97 @@ const markNodeUsage = (currentNode, nextNode) => {
 
 //绘制最短路径
 function drwaPath(path, routes) {
-  console.log(path, routes)
+  console.log(path, routes);
   BaseData.linesSvg
     .selectAll(".line")
     .data(BaseData.nodesLines)
     // .enter()
     .classed("shortest", d => {
       // in-shortest
-      console.log('drwaPath', d, routes)
-      let key1 = getDistanceKey(d[0].siteNo, d[1].siteNo)
+      console.log("drwaPath", d, routes);
+      let key1 = getDistanceKey(d[0].siteNo, d[1].siteNo);
       let isExist = routes.find(route => {
-        route = route.split('-')
-        let routeKey = getDistanceKey(route[0], route[1])
-        return routeKey == key1
-      })
-      return isExist
-    })
-  makeAnim(path)
+        route = route.split("-");
+        let routeKey = getDistanceKey(route[0], route[1]);
+        return routeKey == key1;
+      });
+      return isExist;
+    });
+  makeAnim(path);
 }
 
-
 function getAnimDuration(node1Name, node2Name) {
-  let node1 = findNode(node1Name)
-  let node2 = findNode(node2Name)
-  let key = getDistanceKey(node1Name, node2Name)
-  console.log(key)
-  let distance = BaseData.nodesDistance[key]
-  let len = 1
+  let node1 = findNode(node1Name);
+  let node2 = findNode(node2Name);
+  let key = getDistanceKey(node1Name, node2Name);
+  console.log(key);
+  let distance = BaseData.nodesDistance[key];
+  let len = 1;
   if (node1.x == node2.x) {
-    len = Math.abs(node1.y - node2.y) / 160
+    len = Math.abs(node1.y - node2.y) / 160;
   } else if (node1.y == node2.y) {
-    len = Math.abs(node1.x - node2.x) / 160
+    len = Math.abs(node1.x - node2.x) / 160;
   }
-  return duration * len
+  return duration * len;
 }
 /**
  *绘制轨迹移动动画
  *
  * @param {*} path
  */
-const duration = 500//单位：ms
+const duration = 500; //单位：ms
 function makeAnim(path) {
-  const linefunc = d3.line()
+  const linefunc = d3
+    .line()
     .x(d => {
-      let node = findNode(d)
-      return node.x
+      let node = findNode(d);
+      return node.x;
     })
     .y(d => {
-      let node = findNode(d)
-      return node.y
-    })
+      let node = findNode(d);
+      return node.y;
+    });
 
-  let transitionFunc = (s) => {
-    let secondNode = findNode(path[1])
+  let transitionFunc = s => {
+    let secondNode = findNode(path[1]);
     let tmp = s
-      .transition()     //使用d3.selection.transition函数来定义一个过渡
+      .transition() //使用d3.selection.transition函数来定义一个过渡
       .ease(d3.easeLinear)
-      .duration(getAnimDuration(path[0], path[1]))    //使用duration函数来设置过渡效果的持续时间
-      .attr('cx', secondNode.x)
-      .attr('cy', secondNode.y)
+      .duration(getAnimDuration(path[0], path[1])) //使用duration函数来设置过渡效果的持续时间
+      .attr("cx", secondNode.x)
+      .attr("cy", secondNode.y);
     for (let idx = 2; idx < path.length; idx++) {
-      let next = findNode(path[idx])
+      let next = findNode(path[idx]);
       tmp = tmp
         .transition()
-        .ease(d3.easeLinear)     //使用d3.selection.transition函数来定义一个过渡
-        .duration(getAnimDuration(path[idx - 1], path[idx]))    //使用duration函数来设置过渡效果的持续时间
-        .attr('cx', next.x)
-        .attr('cy', next.y)
+        .ease(d3.easeLinear) //使用d3.selection.transition函数来定义一个过渡
+        .duration(getAnimDuration(path[idx - 1], path[idx])) //使用duration函数来设置过渡效果的持续时间
+        .attr("cx", next.x)
+        .attr("cy", next.y);
     }
-  }
-  let start = findNode(path[0])
-  BaseData.animCircle = BaseData.svg.selectAll('circle.move')
-    .data(['circle-move'])
+  };
+  let start = findNode(path[0]);
+  BaseData.animCircle = BaseData.svg
+    .selectAll("circle.move")
+    .data(["circle-move"]);
 
   let update = BaseData.animCircle;
   let enter = update.enter();
   enter
-    .append('circle')
-    .attr('class', 'anim-path move')
-    .attr('cx', start.x)
-    .attr('cy', start.y)
-    .attr('r', 10)
-    .attr('fill', 'green')
-    .call(transitionFunc)
+    .append("circle")
+    .attr("class", "anim-path move")
+    .attr("cx", start.x)
+    .attr("cy", start.y)
+    .attr("r", 10)
+    .attr("fill", "green")
+    .call(transitionFunc);
 
   update
-    .attr('cx', start.x)
-    .attr('cy', start.y)
-    .attr('r', 10)
-    .attr('fill', 'green')
-    .call(transitionFunc)
+    .attr("cx", start.x)
+    .attr("cy", start.y)
+    .attr("r", 10)
+    .attr("fill", "green")
+    .call(transitionFunc);
 }
 /**
  * find node by siteNo
@@ -437,19 +545,21 @@ function getDistanceKey(node1Name, node2Name) {
       return a > b ? 1 : a < b ? -1 : 0;
     })
     .join("-");
-  return lineName
+  return lineName;
 }
 
-
 function updateLine() {
-  console.log('updateLine',BaseData.lineGroupRect)
-  BaseData.lineGroupRect
-    .data(BaseData.nodesLines)
-    .text(d => {
-      let keyName=getDistanceKey(d[0].siteNo,d[1].siteNo)
-      console.log("text", BaseData.routeDistance,d,BaseData.routeDistance[keyName]);
-      return BaseData.routeDistance[keyName];
-    });
+  console.log("updateLine", BaseData.lineGroupRect);
+  BaseData.lineGroupRect.data(BaseData.nodesLines).text(d => {
+    let keyName = getDistanceKey(d[0].siteNo, d[1].siteNo);
+    console.log(
+      "text",
+      BaseData.routeDistance,
+      d,
+      BaseData.routeDistance[keyName]
+    );
+    return BaseData.routeDistance[keyName];
+  });
 }
 
 function drawNodeLine() {
@@ -523,58 +633,60 @@ $(() => {
 
 //事件绑定
 function bindEvt() {
-  $('#calcShortestPathBtn').on('click', (e) => {
+  $("#calcShortestPathBtn").on("click", e => {
     let params = {
-      "maxOver": 2,
-      "paths": BaseData.markers.v.map((node, i) => {
+      maxOver: 2,
+      paths: BaseData.markers.v.map((node, i) => {
         return {
-          "start": node.node,
-          "end": BaseData.markers.s[i].node,
-        }
+          start: node.node,
+          end: BaseData.markers.s[i].node
+        };
       }),
-      "start": BaseData.markers.start[0].node,
-    }
+      start: BaseData.markers.a[0].node
+    };
     $.ajax({
-      type: 'post',
-      url: 'map/beacon',
-      dataType: 'json',
-      contentType: 'application/json',
+      type: "post",
+      url: "map/beacon",
+      dataType: "json",
+      contentType: "application/json",
       data: JSON.stringify(params),
       success(data) {
-        showResult(data)
+        showResult(data);
       },
       error(err) {
-        console.log(err)
+        console.log(err);
       }
-    })
-  })
+    });
+  });
 
-  $('.update-distance>.cancel').on('click', (e) => {
-    layer.close(BaseData.layerIdx)
-    BaseData.layerIdx = -1
-  })
-  $('.update-distance>.ok').on('click', (e) => {
-    let distance = $('.update-distance>input').val()
+  $(".update-distance>.cancel").on("click", e => {
+    layer.close(BaseData.layerIdx);
+    BaseData.layerIdx = -1;
+  });
+  $(".update-distance>.ok").on("click", e => {
+    let distance = $(".update-distance>input").val();
     if (!distance || parseInt(distance) < 1) {
-      layer.msg('非法输入 ' + distance)
-      return
+      layer.msg("非法输入 " + distance);
+      return;
     }
-    let points = clickedPath.split('-')
+    let points = clickedPath.split("-");
     $.ajax({
-      url: `map/modify?point1=${points[0]}&point2=${points[1]}&distance=${distance}`,
-      type: 'post',
+      url: `map/modify?point1=${points[0]}&point2=${
+        points[1]
+      }&distance=${distance}`,
+      type: "post",
       success(resp) {
-        console.log(resp)
+        console.log(resp);
         updateRouteInfo(resp);
         updateLine();
       },
       error(err) {
-        console.log(err)
+        console.log(err);
       }
-    })
-    layer.close(BaseData.layerIdx)
-    BaseData.layerIdx = -1
-  })
+    });
+    layer.close(BaseData.layerIdx);
+    BaseData.layerIdx = -1;
+  });
 }
 
 /**
@@ -583,43 +695,37 @@ function bindEvt() {
  * @param {*} data
  */
 function showResult(data) {
-  let distance = data.distance
-  let path = data.path
-  $('.distance').html(`最短路径距离:${distance}`)
-  $('.path').html(`最短路线:${path.join('➝')}`)
+  let distance = data.distance;
+  let path = data.path;
+  $(".distance").html(`最短路径距离:${distance}`);
+  $(".path").html(`最短路线:${path.join("➝")}`);
   //获取路径连线信息
-  let routes = []
-  let tmp = []
+  let routes = [];
+  let tmp = [];
   path.forEach((val, idx) => {
-    if (idx + 1 == path.length) return
-    routes.push([
-      val,
-      path[idx + 1]
-    ].join('-'))
-  })
-  console.log(routes.join(','))
+    if (idx + 1 == path.length) return;
+    routes.push([val, path[idx + 1]].join("-"));
+  });
+  console.log(routes.join(","));
   //绘制最短路径
-  drwaPath(path, routes)
+  drwaPath(path, routes);
 }
 
-
-let clickedPath = null
+let clickedPath = null;
 function updatePathLen(route, a, b, c) {
   if (BaseData.layerIdx > 0) {
-    layer.msg('请先关闭输入框')
-    return
+    layer.msg("请先关闭输入框");
+    return;
   }
-  console.log(route, a, b, c, d3.event)
-  clickedPath = route
+  console.log(route, a, b, c, d3.event);
+  clickedPath = route;
   BaseData.layerIdx = layer.open({
     type: 1,
     shade: false,
     title: false, //不显示标题
     shadeClose: false,
     closeBtn: 0,
-    content: $('.update-distance'), //捕获的元素，注意：最好该指定的元素要存放在body最外层，否则可能被其它的相对元素所影响
-    cancel: function () {
-
-    }
+    content: $(".update-distance"), //捕获的元素，注意：最好该指定的元素要存放在body最外层，否则可能被其它的相对元素所影响
+    cancel: function() {}
   });
 }
