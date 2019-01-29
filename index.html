@@ -8,7 +8,9 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
   <script src="./libs/jquery-3.3.1.min.js"></script>
   <script src="./libs/d3.v5.min.js"></script>
+  <script src="./libs/layer/layer.js"></script>
   <link rel="stylesheet" href="./app.css">
+  <link rel="stylesheet" href="./libs/bootstrap.css">
   <style>
     .graph .site {
       fill: white;
@@ -53,20 +55,27 @@
 
 <body>
   <div class="main">
-    <div class="tools">
-      工具栏
+
+    <div class="alert alert-primary tools">
       <div>
-        <button id="calcShortestPathBtn">计算最短路径</button>
+        <button id="calcShortestPathBtn" type="button" class="btn btn-primary">计算最短路径</button>
       </div>
-      <div class="result">
+      <div class="result ">
         <div class="distance"></div>
         <div class="path"></div>
       </div>
     </div>
-    <div class="graph-container">
-        <div class="graph"></div>
+    <div class="graph-container alert alert-light">
+      <div class="graph"></div>
     </div>
   </div>
+  <div class="layer-content">
+      <div class="update-distance">
+        <input type="number"  placeholder="输入距离" style="width:5em;height: 1.2em;">
+        <i class="ok" aria-hidden="true"></i>
+        <i class="cancel" aria-hidden="true"></i>
+      </div>
+    </div>
 </body>
 <script src="./app.js"></script>
 

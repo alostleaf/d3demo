@@ -29,3 +29,32 @@ html,body{
     margin:  0 auto;
     /* background: gray; */
 }
+
+.result{
+    margin-top: 1em;
+}
+
+.update-distance{
+    text-align: center;
+}
+
+.update-distance >.cancel:hover{
+    color:blue;
+}
+
+.update-distance .ok{
+    width:17px;
+    height: 17px;
+    display: inline-block;
+    background-size: 17px 17px;
+    background-repeat: no-repeat;
+    background-image: url("./libs/check-circle.svg")
+}
+.update-distance .cancel{
+    width:17px;
+    height: 17px;
+    background-repeat: no-repeat;
+    display: inline-block;
+    background-size: 17px 17px;
+    background-image: url("./libs/close-circle.svg")
+}
