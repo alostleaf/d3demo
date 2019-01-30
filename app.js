@@ -208,8 +208,7 @@ function drawSites(sites) {
   }
   if (!BaseData.svg) {
     BaseData.svg = d3
-      .select(".graph")
-      .append("svg")
+      .select("svg#main")
       .attr("width", BaseData.width)
       .attr("height", BaseData.height);
   }
@@ -297,10 +296,21 @@ const getValiableMarkerPos = node => {
     node.otherPosIncrement += 30
     return { x: node.x - dx, y: node.y - 60 + node.otherPosIncrement }
   }
-  if (key == "top") return { x: node.x - 12, y: node.y - dy };
-  if (key == "left") return { x: node.x - dx, y: node.y - 12 };
-  if (key == "right") return { x: node.x + dx - 24, y: node.y - 12 };
-  if (key == "bottom") return { x: node.x - 12, y: node.y + dy - 24 };
+  let xy = null
+  node.useage[key] = false
+  if (key == "top") {
+    xy = { x: node.x - 12, y: node.y - dy }
+  };
+  if (key == "left") {
+    xy = { x: node.x - dx, y: node.y - 12 };
+  }
+  if (key == "right") {
+    xy = { x: node.x + dx - 24, y: node.y - 12 };
+  }
+  if (key == "bottom") {
+    xy = { x: node.x - 12, y: node.y + dy - 24 };
+  }
+  return xy
 };
 const drawDefaultMaker = () => {
   let dragEvent = d3
@@ -406,6 +416,7 @@ const drawMarker = (type, content, event) => {
     .attr("width", 25)
     .attr("height", 25)
     .attr("class", `marker ${type}`)
+    .attr('id', d => `marker${d.node}`)
     .attr("transform", (d, i) => {
       let node = findNode(d.node);
       let xy = getValiableMarkerPos(node);
@@ -425,7 +436,19 @@ const drawMarker = (type, content, event) => {
     .attr("class", "text")
     .attr("dx", 12)
     .attr("dy", 13)
-    .text(d => d.show);
+    .text(d => d.show)
+
+  if (type == 'v') {
+    let peopleGroup = rectMarker.append('g')
+      .attr('class', 'people')
+      .attr('transform', `translate(5,0)`)
+    peopleGroup
+      .append('image')
+      .attr('height', '20px')
+      .attr('width', '20px')
+      .attr('x', (d, i) => 20)
+      .attr('xlink:href', d => `p${d.show[1]}.png`)
+  }
 };
 
 //标记一个node在四个方向的占用情况
@@ -476,7 +499,26 @@ function clearAnim() {
     // .enter()
     .classed("shortest", false);
   BaseData.svg
-    .selectAll("circle.move").remove()
+    .selectAll("g.move").remove()
+
+  let destionNode = BaseData.currentResult[BaseData.currentResult.length - 1]
+  let nodeG = BaseData.svg.select('g#marker' + destionNode)
+  nodeG.selectAll('image').remove()
+}
+
+function drawEndPeople() {
+  console.log('end people')
+  //绘制终点图形
+  let destionNode = BaseData.currentResult[BaseData.currentResult.length - 1]
+  let nodeG = BaseData.svg.select('g#marker' + destionNode)
+  nodeG.selectAll('image')
+    .data(['1', '2', '3'])
+    .enter()
+    .append('image')
+    .attr('height', '20px')
+    .attr('width', '20px')
+    .attr('x', (d, i) => (i + 1) * 20)
+    .attr('xlink:href', d => `p${d}.png`)
 }
 
 function getAnimDuration(node1Name, node2Name) {
@@ -493,13 +535,28 @@ function getAnimDuration(node1Name, node2Name) {
   }
   return duration * len;
 }
+
+function checkIsV(nodeName) {
+  let v = BaseData.markers.v
+  return v.find(i => i.node + '' == nodeName)
+}
+
+let currentCarVipCnt = ''
+function clearMarkerPeople(nodeName) {
+  let node = BaseData.svg.select(`g#marker${nodeName}`)
+  let t=node.select('text').text()
+  if(!currentCarVipCnt.includes(t)) currentCarVipCnt += t+' '
+  BaseData.carCnt.text(`VIP:${currentCarVipCnt}`)
+  node.select('g.people').remove()
+}
 /**
  *绘制轨迹移动动画
  *
  * @param {*} path
  */
-const duration = 500; //单位：ms
+const duration = 800; //单位：ms
 function makeAnim(path) {
+  BaseData.animEnd = false
   let totalDuration = 0
   const linefunc = d3
     .line()
@@ -512,54 +569,77 @@ function makeAnim(path) {
       return node.y;
     });
 
+
+  let oneNodeAnimEndFunc = function (d, b, c) {
+    console.log(d3.select(this).attr('currentNode'))
+    let nodeName = d3.select(this).attr('currentNode')
+    if (checkIsV(nodeName)) {
+      clearMarkerPeople(nodeName)
+    }
+  }
   let transitionFunc = s => {
     let secondNode = findNode(path[1]);
     let duration1 = getAnimDuration(path[0], path[1])
     totalDuration += duration1
     let tmp = s
       .transition() //使用d3.selection.transition函数来定义一个过渡
+      .delay(300)
+      .on('end', oneNodeAnimEndFunc)
       .ease(d3.easeLinear)
       .duration(duration1) //使用duration函数来设置过渡效果的持续时间
-      .attr("cx", secondNode.x)
-      .attr("cy", secondNode.y);
+      .attr('transform', `translate(${secondNode.x + 30},${secondNode.y - 30})`)
+      .attr('currentNode', secondNode.siteNo);
     for (let idx = 2; idx < path.length; idx++) {
       let next = findNode(path[idx]);
       let durationAB = getAnimDuration(path[idx - 1], path[idx])
       totalDuration += durationAB
       tmp = tmp
         .transition()
+        .delay(300)
+        .on('end', oneNodeAnimEndFunc)
         .ease(d3.easeLinear) //使用d3.selection.transition函数来定义一个过渡
         .duration(durationAB) //使用duration函数来设置过渡效果的持续时间
-        .attr("cx", next.x)
-        .attr("cy", next.y);
+        .attr('transform', `translate(${next.x + 30},${next.y - 30})`)
+        .attr('currentNode', next.siteNo)
     }
     tmp.on('end', d => {
       console.log('animation end')
-      setTimeout(() => { clearAnim() }, 1000)
+      BaseData.animEnd = true
+      currentCarVipCnt=''
+      setTimeout(() => { clearAnim() }, 3000)
+      drawEndPeople()
     })
   };
   let start = findNode(path[0]);
+
   BaseData.animCircle = BaseData.svg
     .selectAll("circle.move")
     .data(["circle-move"]);
 
+
   let update = BaseData.animCircle;
   let enter = update.enter();
-  enter
-    .append("circle")
+  let circle = enter
+    .append("g")
     .attr("class", "anim-path move")
-    .attr("cx", start.x)
-    .attr("cy", start.y)
-    .attr("r", 10)
+    .attr('transform', `translate(${start.x + 30},${start.y - 30})`)
     .attr("fill", "green")
+
     .call(transitionFunc);
 
   update
-    .attr("cx", start.x)
-    .attr("cy", start.y)
-    .attr("r", 10)
     .attr("fill", "green")
     .call(transitionFunc);
+
+  let carBg = circle
+    .append('image')
+    .attr('calss', 'bg')
+    .attr('height', '60px')
+    .attr('width', '60px')
+    .attr('xlink:href', 'car.jpg')
+
+  BaseData.carCnt = circle.append('text')
+    .text('')
 
   return totalDuration
 }
@@ -666,15 +746,22 @@ function drawNodeLine() {
 }
 
 $(() => {
+  BaseData.animEnd = true
   app.updateSize();
   getPathInfo();
   bindEvt();
   console.log("app", BaseData);
 });
 
+let AlgorithmType = 'astar'
+let AlgorithmTypeName = 'A星算法'
 //事件绑定
 function bindEvt() {
   $("#calcShortestPathBtn").on("click", e => {
+    if (BaseData.animEnd != true) {
+      layer.msg('当前算法演示尚未结束')
+      return
+    }
     let params = {
       maxOver: 2,
       paths: BaseData.markers.v.map((node, i) => {
@@ -685,17 +772,22 @@ function bindEvt() {
       }),
       start: BaseData.markers.a[0].node
     };
+    AlgorithmType = $('#typeSelect input:radio:checked').val()
+    AlgorithmTypeName = $('#typeSelect input:radio:checked').data('name')
+    let reqStartTime = reqEndTime = new Date().getTime()
     $.ajax({
       type: "post",
-      url: "map/beacon",
+      url: `map/${AlgorithmType}/beacon`,
       dataType: "json",
       contentType: "application/json",
       data: JSON.stringify(params),
       success(data) {
-        showResult(data);
+        reqEndTime = new Date().getTime()
+        showResult(data, reqEndTime - reqStartTime);
       },
       error(err) {
         console.log(err);
+        layer.msg(`所选算法目前尚未完成 :)`)
       }
     });
   });
@@ -707,9 +799,12 @@ function bindEvt() {
  *
  * @param {*} data
  */
-function showResult(data) {
+function showResult(data, time) {
   let distance = data.distance;
   let path = data.path;
+  BaseData.currentResult = path
+  $('.result .typeName').html(`所选算法:${AlgorithmTypeName}`)
+  $('.result .time').html(`算法用时:${time} ms`)
   $(".distance").html(`最短路径距离:${distance}`);
   $(".path").html(`最短路线:${path.join("➝")}`);
   //获取路径连线信息
@@ -742,7 +837,7 @@ function updatePathLen(route, a, b, c) {
     }
     let points = clickedPath.split("-");
     $.ajax({
-      url: `map/modify?point1=${points[0]}&point2=${
+      url: `map/iteration/modify?point1=${points[0]}&point2=${
         points[1]
         }&distance=${distance}`,
       type: "post",

@@ -1,6 +1,6 @@
 html,body{
     height: 100%;
-    overflow: hidden;
+    overflow: auto;
 }
 
 .main{
@@ -32,7 +32,7 @@ html,body{
 
 .result{
     margin-top: 1em;
-    height: 60px;
+    
 }
 
 .update-distance{
