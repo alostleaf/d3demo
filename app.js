@@ -49,7 +49,7 @@ const BaseData = {
   },
   nodesXY: {} //各个node的坐标信息{1:[1,2],2:[50,10]}
 };
-const APP = function () { };
+const APP = function() {};
 APP.prototype.updateSize = () => {
   console.log($(".graph").width(), $(".graph").height());
   BaseData.width = $(".graph").width() || 800;
@@ -248,7 +248,7 @@ function drawSites(sites) {
   BaseData.nodesLines = [];
   BaseData.nodes.forEach((node, idx) => {
     node.useage = { bottom: true, left: true, right: true, top: true };
-    node.otherPosIncrement = 0
+    node.otherPosIncrement = 0;
     let nodeMap = node.nextMap;
     let parentNodeName = node.siteNo;
     for (var key in nodeMap) {
@@ -293,14 +293,14 @@ const getValiableMarkerPos = node => {
 
   //四个点均已繁忙，返回斜线方向的坐标
   if (canUsePos == null) {
-    node.otherPosIncrement += 30
-    return { x: node.x - dx, y: node.y - 60 + node.otherPosIncrement }
+    node.otherPosIncrement += 30;
+    return { x: node.x - dx, y: node.y - 60 + node.otherPosIncrement };
   }
-  let xy = null
-  node.useage[key] = false
+  let xy = null;
+  node.useage[key] = false;
   if (key == "top") {
-    xy = { x: node.x - 12, y: node.y - dy }
-  };
+    xy = { x: node.x - 12, y: node.y - dy };
+  }
   if (key == "left") {
     xy = { x: node.x - dx, y: node.y - 12 };
   }
@@ -310,29 +310,29 @@ const getValiableMarkerPos = node => {
   if (key == "bottom") {
     xy = { x: node.x - 12, y: node.y + dy - 24 };
   }
-  return xy
+  return xy;
 };
 const drawDefaultMaker = () => {
   let dragEvent = d3
     .drag()
-    .on("drag", function (d) {
+    .on("drag", function(d) {
       // console.log("drag", d, d3.event);
       let x = d3.event.x - 12.5;
       let y = d3.event.y - 12.5;
       d3.select(this).attr("transform", "translate(" + x + "," + y + ")");
-      let siteNO = isAssignNewNode(d3.event.x, d3.event.y)
-      console.log('drag', siteNO)
+      let siteNO = isAssignNewNode(d3.event.x, d3.event.y);
+      console.log("drag", siteNO);
       if (siteNO != undefined) {
-        updateNodeHoverStatus(siteNO, 'hover')
+        updateNodeHoverStatus(siteNO, "hover");
       } else {
-        updateNodeHoverStatus(null)
+        updateNodeHoverStatus(null);
       }
     })
-    .on("start", function (d) {
+    .on("start", function(d) {
       console.log("dragstart", d);
       // d.preXY=d.xy
     })
-    .on("end", function (d) {
+    .on("end", function(d) {
       console.log("dragend", d, BaseData.nodesXY, d3.event);
       let newNode = isAssignNewNode(d3.event.x, d3.event.y);
       if (newNode) {
@@ -344,67 +344,59 @@ const drawDefaultMaker = () => {
           "translate(" + d.xy.x + "," + d.xy.y + ")"
         );
       }
-      updateNodeHoverStatus(null)
+      updateNodeHoverStatus(null);
     });
   drawMarker("start", BaseData.markers.a, dragEvent);
   drawMarker("v", BaseData.markers.v, dragEvent);
   drawMarker("s", BaseData.markers.s, dragEvent);
 };
 
-
 //更新node hover状态
 function updateNodeHoverStatus(siteNO, className) {
-  BaseData.svgSites.selectAll('circle')
-    .classed('hover', d => {
-      return (siteNO && d.siteNo == siteNO)
-    })
+  BaseData.svgSites.selectAll("circle").classed("hover", d => {
+    return siteNO && d.siteNo == siteNO;
+  });
 }
 //检查是否移动marker到圆中
 function isAssignNewNode(x, y) {
-  let nodesXY = BaseData.nodesXY
+  let nodesXY = BaseData.nodesXY;
   for (let siteNo in nodesXY) {
-    let nodeX = nodesXY[siteNo][0]
-    let nodeY = nodesXY[siteNo][1]
+    let nodeX = nodesXY[siteNo][0];
+    let nodeY = nodesXY[siteNo][1];
     if (isInCircle(x, nodeX, y, nodeY)) {
-      return siteNo
+      return siteNo;
     }
   }
 }
 
 //检查坐标是否在圆内
 function isInCircle(x1, x2, y1, y2) {
-  let r = 15
-  return Math.sqrt(
-    Math.pow(x1 - x2, 2)
-    +
-    Math.pow(y1 - y2, 2)
-  ) <= 15
+  let r = 15;
+  return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2)) <= 15;
 }
 //移动marker
 function moveMarker(oldMarker, newMarker, dragTarget) {
-  console.log('moveMarker', arguments)
+  console.log("moveMarker", arguments);
   let newNode = findNode(newMarker);
-  let pos = getValiableMarkerPos(newNode)
-  console.log('new pos', pos)
-  dragTarget.attr(
-    "transform",
-    "translate(" + pos.x + "," + pos.y + ")"
-  );
-  oldMarker.xy.x = pos.x
-  oldMarker.xy.y = pos.y
-  updateMarkerData(oldMarker, newMarker)
+  let pos = getValiableMarkerPos(newNode);
+  console.log("new pos", pos);
+  dragTarget.attr("transform", "translate(" + pos.x + "," + pos.y + ")");
+  dragTarget.attr("id", `marker${newNode.siteNo}`);
+  oldMarker.xy.x = pos.x;
+  oldMarker.xy.y = pos.y;
+  updateMarkerData(oldMarker, newMarker);
 }
 
 //更新baseData中的marker数据
 function updateMarkerData(oldMarker, newMarker) {
-  console.log('updateMarkerData', oldMarker, newMarker)
-  oldMarker.node = newMarker
+  console.log("updateMarkerData", oldMarker, newMarker);
+  oldMarker.node = newMarker;
   return;
-  let show = oldMarker.show[0].toLocaleLowerCase()
-  let info = BaseData.markers[show]
-  let target = info.find(i => i.node == oldMarker.node)
-  target.node == newMarker
-  console.log(BaseData.markers)
+  let show = oldMarker.show[0].toLocaleLowerCase();
+  let info = BaseData.markers[show];
+  let target = info.find(i => i.node == oldMarker.node);
+  target.node == newMarker;
+  console.log(BaseData.markers);
 }
 
 const drawMarker = (type, content, event) => {
@@ -416,7 +408,7 @@ const drawMarker = (type, content, event) => {
     .attr("width", 25)
     .attr("height", 25)
     .attr("class", `marker ${type}`)
-    .attr('id', d => `marker${d.node}`)
+    .attr("id", d => `marker${d.node}`)
     .attr("transform", (d, i) => {
       let node = findNode(d.node);
       let xy = getValiableMarkerPos(node);
@@ -436,18 +428,19 @@ const drawMarker = (type, content, event) => {
     .attr("class", "text")
     .attr("dx", 12)
     .attr("dy", 13)
-    .text(d => d.show)
+    .text(d => d.show);
 
-  if (type == 'v') {
-    let peopleGroup = rectMarker.append('g')
-      .attr('class', 'people')
-      .attr('transform', `translate(5,0)`)
+  if (type == "v") {
+    let peopleGroup = rectMarker
+      .append("g")
+      .attr("class", "people")
+      .attr("transform", `translate(5,0)`);
     peopleGroup
-      .append('image')
-      .attr('height', '20px')
-      .attr('width', '20px')
-      .attr('x', (d, i) => 20)
-      .attr('xlink:href', d => `p${d.show[1]}.png`)
+      .append("image")
+      .attr("height", "20px")
+      .attr("width", "20px")
+      .attr("x", (d, i) => 20)
+      .attr("xlink:href", d => `p${d.show[1]}.png`);
   }
 };
 
@@ -488,7 +481,7 @@ function drwaPath(path, routes) {
   let totalDuration = makeAnim(path);
   setTimeout(() => {
     // clearAnim()
-  }, totalDuration)
+  }, totalDuration);
 }
 
 //清除路径动画
@@ -498,27 +491,42 @@ function clearAnim() {
     .data(BaseData.nodesLines)
     // .enter()
     .classed("shortest", false);
-  BaseData.svg
-    .selectAll("g.move").remove()
+  BaseData.svg.selectAll("g.move").remove();
 
-  let destionNode = BaseData.currentResult[BaseData.currentResult.length - 1]
-  let nodeG = BaseData.svg.select('g#marker' + destionNode)
-  nodeG.selectAll('image').remove()
+  let nodeG = BaseData.svg.selectAll("g.people");
+  nodeG.remove();
+
+  BaseData.markers.v.forEach(val => {
+    console.log('redraw marker people')
+    let nodeName = val.node;
+    let rectMarker = d3.select(`g#marker${nodeName}`);
+    let peopleGroup = rectMarker
+      .append("g")
+      .attr("class", "people")
+      .attr("transform", `translate(5,0)`);
+    peopleGroup
+      .append("image")
+      .attr("height", "20px")
+      .attr("width", "20px")
+      .attr("x", (d, i) => 20)
+      .attr("xlink:href", d => `p${val.show[1]}.png`);
+  });
 }
 
 function drawEndPeople() {
-  console.log('end people')
+  console.log("end people");
   //绘制终点图形
-  let destionNode = BaseData.currentResult[BaseData.currentResult.length - 1]
-  let nodeG = BaseData.svg.select('g#marker' + destionNode)
-  nodeG.selectAll('image')
-    .data(['1', '2', '3'])
+  let destionNode = BaseData.currentResult[BaseData.currentResult.length - 1];
+  let nodeG = BaseData.svg.select("g#marker" + destionNode);
+  nodeG
+    .selectAll("image")
+    .data(["1", "2", "3"])
     .enter()
-    .append('image')
-    .attr('height', '20px')
-    .attr('width', '20px')
-    .attr('x', (d, i) => (i + 1) * 20)
-    .attr('xlink:href', d => `p${d}.png`)
+    .append("image")
+    .attr("height", "20px")
+    .attr("width", "20px")
+    .attr("x", (d, i) => (i + 1) * 20)
+    .attr("xlink:href", d => `p${d}.png`);
 }
 
 function getAnimDuration(node1Name, node2Name) {
@@ -537,17 +545,42 @@ function getAnimDuration(node1Name, node2Name) {
 }
 
 function checkIsV(nodeName) {
-  let v = BaseData.markers.v
-  return v.find(i => i.node + '' == nodeName)
+  let v = BaseData.markers.v;
+  return v.find(i => i.node + "" == nodeName);
 }
 
-let currentCarVipCnt = ''
+function checkIsS(nodeName) {
+  let s = BaseData.markers.s;
+  return s.find(i => i.node + "" == nodeName);
+}
+
+const hasGetInNode = {};
 function clearMarkerPeople(nodeName) {
-  let node = BaseData.svg.select(`g#marker${nodeName}`)
-  let t=node.select('text').text()
-  if(!currentCarVipCnt.includes(t)) currentCarVipCnt += t+' '
-  BaseData.carCnt.text(`VIP:${currentCarVipCnt}`)
-  node.select('g.people').remove()
+  let node = BaseData.svg.select(`g#marker${nodeName}`);
+  node.select("g.people").remove();
+  hasGetInNode[nodeName] = true;
+}
+
+function dropdownPeople(nodeName) {
+  let node = findNode(nodeName);
+  let SnodeIdx = BaseData.markers.s.findIndex(i => i.node + "" == nodeName);
+  let Vnode = BaseData.markers.v[SnodeIdx];
+  let tmp = hasGetInNode[Vnode.node + ""];
+  console.log(tmp, hasGetInNode, Vnode.node);
+  if (tmp) {
+    //添加people
+    let markerNode = BaseData.svg.select(`g#marker${nodeName}`);
+    let peopleGroup = markerNode
+      .append("g")
+      .attr("class", "people")
+      .attr("transform", `translate(5,0)`);
+    peopleGroup
+      .append("image")
+      .attr("height", "20px")
+      .attr("width", "20px")
+      .attr("x", (d, i) => 20)
+      .attr("xlink:href", d => `p${Vnode.show[1]}.png`);
+  }
 }
 /**
  *绘制轨迹移动动画
@@ -555,9 +588,10 @@ function clearMarkerPeople(nodeName) {
  * @param {*} path
  */
 const duration = 800; //单位：ms
+let isLastPos = false;
 function makeAnim(path) {
-  BaseData.animEnd = false
-  let totalDuration = 0
+  BaseData.animEnd = false;
+  let totalDuration = 0;
   const linefunc = d3
     .line()
     .x(d => {
@@ -569,46 +603,54 @@ function makeAnim(path) {
       return node.y;
     });
 
-
-  let oneNodeAnimEndFunc = function (d, b, c) {
-    console.log(d3.select(this).attr('currentNode'))
-    let nodeName = d3.select(this).attr('currentNode')
-    if (checkIsV(nodeName)) {
-      clearMarkerPeople(nodeName)
+  let oneNodeAnimEndFunc = function(type) {
+    let nodeName = "";
+    if (type == "isLastPos") {
+      nodeName = BaseData.currentResult[BaseData.currentResult.length - 1];
+    } else {
+      nodeName = d3.select(this).attr("currentNode");
     }
-  }
+    console.log("oneNodeAnimEndFunc", nodeName);
+    if (checkIsV(nodeName)) {
+      clearMarkerPeople(nodeName);
+    } else if (checkIsS(nodeName)) {
+      dropdownPeople(nodeName);
+    }
+  };
   let transitionFunc = s => {
     let secondNode = findNode(path[1]);
-    let duration1 = getAnimDuration(path[0], path[1])
-    totalDuration += duration1
+    let duration1 = getAnimDuration(path[0], path[1]);
+    totalDuration += duration1;
     let tmp = s
       .transition() //使用d3.selection.transition函数来定义一个过渡
       .delay(300)
-      .on('end', oneNodeAnimEndFunc)
+      .on("end", oneNodeAnimEndFunc)
       .ease(d3.easeLinear)
       .duration(duration1) //使用duration函数来设置过渡效果的持续时间
-      .attr('transform', `translate(${secondNode.x + 30},${secondNode.y - 30})`)
-      .attr('currentNode', secondNode.siteNo);
+      .attr("transform", `translate(${secondNode.x + 30},${secondNode.y - 30})`)
+      .attr("currentNode", secondNode.siteNo);
     for (let idx = 2; idx < path.length; idx++) {
       let next = findNode(path[idx]);
-      let durationAB = getAnimDuration(path[idx - 1], path[idx])
-      totalDuration += durationAB
+      let durationAB = getAnimDuration(path[idx - 1], path[idx]);
+      totalDuration += durationAB;
       tmp = tmp
         .transition()
         .delay(300)
-        .on('end', oneNodeAnimEndFunc)
+        .on("end", oneNodeAnimEndFunc)
         .ease(d3.easeLinear) //使用d3.selection.transition函数来定义一个过渡
         .duration(durationAB) //使用duration函数来设置过渡效果的持续时间
-        .attr('transform', `translate(${next.x + 30},${next.y - 30})`)
-        .attr('currentNode', next.siteNo)
+        .attr("transform", `translate(${next.x + 30},${next.y - 30})`)
+        .attr("currentNode", next.siteNo);
     }
-    tmp.on('end', d => {
-      console.log('animation end')
-      BaseData.animEnd = true
-      currentCarVipCnt=''
-      setTimeout(() => { clearAnim() }, 3000)
-      drawEndPeople()
-    })
+    tmp.on("end", d => {
+      oneNodeAnimEndFunc("isLastPos");
+      console.log("animation end");
+      BaseData.animEnd = true;
+      setTimeout(() => {
+        clearAnim();
+      }, 3000);
+      // drawEndPeople()
+    });
   };
   let start = findNode(path[0]);
 
@@ -616,32 +658,26 @@ function makeAnim(path) {
     .selectAll("circle.move")
     .data(["circle-move"]);
 
-
   let update = BaseData.animCircle;
   let enter = update.enter();
   let circle = enter
     .append("g")
     .attr("class", "anim-path move")
-    .attr('transform', `translate(${start.x + 30},${start.y - 30})`)
+    .attr("transform", `translate(${start.x + 30},${start.y - 30})`)
     .attr("fill", "green")
 
     .call(transitionFunc);
 
-  update
-    .attr("fill", "green")
-    .call(transitionFunc);
+  update.attr("fill", "green").call(transitionFunc);
 
   let carBg = circle
-    .append('image')
-    .attr('calss', 'bg')
-    .attr('height', '60px')
-    .attr('width', '60px')
-    .attr('xlink:href', 'car.jpg')
+    .append("image")
+    .attr("calss", "bg")
+    .attr("height", "60px")
+    .attr("width", "60px")
+    .attr("xlink:href", "car.jpg");
 
-  BaseData.carCnt = circle.append('text')
-    .text('')
-
-  return totalDuration
+  return totalDuration;
 }
 /**
  * find node by siteNo
@@ -746,21 +782,21 @@ function drawNodeLine() {
 }
 
 $(() => {
-  BaseData.animEnd = true
+  BaseData.animEnd = true;
   app.updateSize();
   getPathInfo();
   bindEvt();
   console.log("app", BaseData);
 });
 
-let AlgorithmType = 'astar'
-let AlgorithmTypeName = 'A星算法'
+let AlgorithmType = "astar";
+let AlgorithmTypeName = "A星算法";
 //事件绑定
 function bindEvt() {
   $("#calcShortestPathBtn").on("click", e => {
     if (BaseData.animEnd != true) {
-      layer.msg('当前算法演示尚未结束')
-      return
+      layer.msg("当前算法演示尚未结束");
+      return;
     }
     let params = {
       maxOver: 2,
@@ -772,9 +808,9 @@ function bindEvt() {
       }),
       start: BaseData.markers.a[0].node
     };
-    AlgorithmType = $('#typeSelect input:radio:checked').val()
-    AlgorithmTypeName = $('#typeSelect input:radio:checked').data('name')
-    let reqStartTime = reqEndTime = new Date().getTime()
+    AlgorithmType = $("#typeSelect input:radio:checked").val();
+    AlgorithmTypeName = $("#typeSelect input:radio:checked").data("name");
+    let reqStartTime = (reqEndTime = new Date().getTime());
     $.ajax({
       type: "post",
       url: `map/${AlgorithmType}/beacon`,
@@ -782,16 +818,15 @@ function bindEvt() {
       contentType: "application/json",
       data: JSON.stringify(params),
       success(data) {
-        reqEndTime = new Date().getTime()
+        reqEndTime = new Date().getTime();
         showResult(data, reqEndTime - reqStartTime);
       },
       error(err) {
         console.log(err);
-        layer.msg(`所选算法目前尚未完成 :)`)
+        layer.msg(`所选算法目前尚未完成 :)`);
       }
     });
   });
-
 }
 
 /**
@@ -802,9 +837,9 @@ function bindEvt() {
 function showResult(data, time) {
   let distance = data.distance;
   let path = data.path;
-  BaseData.currentResult = path
-  $('.result .typeName').html(`所选算法:${AlgorithmTypeName}`)
-  $('.result .time').html(`算法用时:${time} ms`)
+  BaseData.currentResult = path;
+  $(".result .typeName").html(`所选算法:${AlgorithmTypeName}`);
+  $(".result .time").html(`算法用时:${time} ms`);
   $(".distance").html(`最短路径距离:${distance}`);
   $(".path").html(`最短路线:${path.join("➝")}`);
   //获取路径连线信息
@@ -823,33 +858,36 @@ let clickedPath = null;
 function updatePathLen(route, a, b, c) {
   console.log(route, a, b, c, d3.event);
   clickedPath = route;
-  BaseData.layerIdx = layer.prompt({ title: `输入${route}的节点距离`, formType: 0 }, function (pass, index) {
-    console.log('pass', pass)
-    let distance = pass;
-    try {
-      if (!new RegExp('^[0-9]*$').test(distance)) {
-        layer.msg("非法输入,只能输入数字" + distance);
+  BaseData.layerIdx = layer.prompt(
+    { title: `输入${route}的节点距离`, formType: 0 },
+    function(pass, index) {
+      console.log("pass", pass);
+      let distance = pass;
+      try {
+        if (!new RegExp("^[0-9]*$").test(distance)) {
+          layer.msg("非法输入,只能输入数字" + distance);
+          return;
+        }
+      } catch (e) {
+        layer.msg("非法输入 " + distance);
         return;
       }
-    } catch (e) {
-      layer.msg("非法输入 " + distance);
-      return
-    }
-    let points = clickedPath.split("-");
-    $.ajax({
-      url: `map/iteration/modify?point1=${points[0]}&point2=${
-        points[1]
+      let points = clickedPath.split("-");
+      $.ajax({
+        url: `map/iteration/modify?point1=${points[0]}&point2=${
+          points[1]
         }&distance=${distance}`,
-      type: "post",
-      success(resp) {
-        console.log(resp);
-        updateRouteInfo(resp);
-        updateLine();
-      },
-      error(err) {
-        console.log(err);
-      }
-    });
-    layer.close(index);
-  });
+        type: "post",
+        success(resp) {
+          console.log(resp);
+          updateRouteInfo(resp);
+          updateLine();
+        },
+        error(err) {
+          console.log(err);
+        }
+      });
+      layer.close(index);
+    }
+  );
 }
